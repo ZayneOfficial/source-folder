@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Helper Dashboard</title>
+    <link rel="icon" type="image/png" href="/images/cbs-favicon.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <header class="app-header">
+      <div class="header-inner">
+        <div>
+          <div class="header-title">Burial Society Helper</div>
+          <div class="header-sub" id="helperHeader"></div>
+        </div>
+
+        <button class="btn btn-light" id="logoutBtn">Logout</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <div class="section-title">
+          <h2>Payment Marking</h2>
+        </div>
+
+        <div class="toolbar">
+          <select id="funeralSelect">
+            <option value="">Select a funeral...</option>
+          </select>
+
+          <input
+            id="memberSearch"
+            placeholder="Search VN, name, surname or phone"
+          />
+        </div>
+
+        <div id="helperMessage" class="message"></div>
+
+        <div id="paymentSummary" class="small">Select a funeral to begin.</div>
+
+        <div class="table-wrap" style="margin-top: 10px">
+          <table>
+            <thead>
+              <tr>
+                <th>VN Number</th>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Phone</th>
+                <th>Current Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody id="paymentBody">
+              <tr>
+                <td colspan="6" class="empty">Select a funeral.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      
+    </script>
+  </body>
+</html>

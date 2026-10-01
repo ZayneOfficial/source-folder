@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" type="image/png" href="/images/cbs-favicon.png" />
+    <title>Burial Society - Login</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="login-page">
+    <div id="loadingScreen">
+      <div class="loading-box">
+        <img
+          src="/images/cbs.png"
+          alt="Burial Society Logo"
+          class="loading-logo"
+        />
+
+        <h2>Burial Society</h2>
+        <p>Loading your secure portal...</p>
+
+        <div class="loader"></div>
+
+        <small>Powered by NovaStack</small>
+      </div>
+    </div>
+    <main class="login-card">
+      <div class="brand">
+        <div class="brand-icon">
+          <img src="/images/cbs.png" alt="Cape Town Burial Society Logo" />
+        </div>
+        <div>
+          <h1>Burial Society</h1>
+          <p>Management System</p>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="admin">Admin Login</button>
+        <button class="tab" data-tab="member">Member Login</button>
+        <button class="tab" data-tab="helper">Helper Login</button>
+      </div>
+
+      <section id="admin-login" class="login-panel">
+        <form id="adminForm">
+          <label>Email</label>
+          <input
+            id="adminEmail"
+            type="email"
+            placeholder="Admin email"
+            required
+          />
+          <label>Password</label>
+          <input
+            id="adminPassword"
+            type="password"
+            placeholder="Password"
+            required
+          />
+          <button class="btn btn-dark btn-large" type="submit">
+            Login as Admin
+          </button>
+        </form>
+      </section>
+
+      <section id="member-login" class="login-panel hidden">
+        <form id="memberForm">
+          <label>VN Number</label>
+          <input id="memberVN" placeholder="VN001" required />
+
+          <label>Full Name</label>
+          <input
+            id="memberFullName"
+            placeholder="John Smith"
+            autocomplete="name"
+            required
+          />
+          <button class="btn btn-primary btn-large" type="submit">
+            Login as Member
+          </button>
+        </form>
+      </section>
+
+      <section id="helper-login" class="login-panel hidden">
+        <form id="helperForm">
+          <label>VN Number</label>
+          <input id="helperVN" placeholder="VN001" required />
+
+          <label>Full Name</label>
+          <input id="helperName" placeholder="John Smith" required />
+
+          <label>Helper Password</label>
+          <input id="helperPassword" type="password" required />
+
+          <button class="btn btn-primary btn-large" type="submit">
+            Login as Helper
+          </button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

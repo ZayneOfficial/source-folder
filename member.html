@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Member Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="/images/cbs-favicon.png" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-inner">
+        <div>
+          <div class="header-title">My Burial Society</div>
+          <div class="header-sub" id="memberHeader"></div>
+        </div>
+        <button class="btn btn-light" id="logoutBtn">Logout</button>
+      </div>
+    </header>
+    <main class="container">
+      <section class="card">
+        <div class="section-title"><h2>My Details</h2></div>
+        <div class="member-hero" id="details"></div>
+      </section>
+      <section class="card" style="margin-top: 14px">
+        <div class="section-title"><h2>My Dependants</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Relationship</th>
+                <th>Date of Birth</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dependentBody">
+              <tr>
+                <td colspan="5" class="empty">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top: 14px">
+        <div class="section-title"><h2>My Funeral Contributions</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Funeral Name - Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date Paid</th>
+              </tr>
+            </thead>
+            <tbody id="paymentBody">
+              <tr>
+                <td colspan="4" class="empty">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

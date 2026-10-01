@@ -3,6 +3,8 @@ import Header from "../components/Header";
 
 function AdminDashboard() {
   useEffect(() => {
+    const listenerController = new AbortController();
+
     async function api(url, options = {}) {
       const response = await fetch(url, {
         ...options,
@@ -72,10 +74,10 @@ function AdminDashboard() {
       }
     }
 
-    document.getElementById("funeralSelect").addEventListener("change", () => loadPayments().catch((error) => showMessage("funeralMessage", error.message)));
-    document.getElementById("paymentSearch").addEventListener("input", () => loadPayments().catch((error) => showMessage("funeralMessage", error.message)));
-    document.getElementById("memberSearch").addEventListener("input", () => loadMembers().catch((error) => showMessage("memberMessage", error.message)));
-    document.getElementById("refreshMembers").addEventListener("click", () => loadMembers().catch((error) => showMessage("memberMessage", error.message)));
+    document.getElementById("funeralSelect").addEventListener("change", () => loadPayments().catch((error) => showMessage("funeralMessage", error.message)), { signal: listenerController.signal });
+    document.getElementById("paymentSearch").addEventListener("input", () => loadPayments().catch((error) => showMessage("funeralMessage", error.message)), { signal: listenerController.signal });
+    document.getElementById("memberSearch").addEventListener("input", () => loadMembers().catch((error) => showMessage("memberMessage", error.message)), { signal: listenerController.signal });
+    document.getElementById("refreshMembers").addEventListener("click", () => loadMembers().catch((error) => showMessage("memberMessage", error.message)), { signal: listenerController.signal });
     document.getElementById("memberForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       try {
@@ -88,7 +90,7 @@ function AdminDashboard() {
         showMessage("memberMessage", "Member added successfully.", true);
         await loadMembers();
       } catch (error) { showMessage("memberMessage", error.message); }
-    });
+    }, { signal: listenerController.signal });
     document.getElementById("funeralForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       try {
@@ -101,7 +103,7 @@ function AdminDashboard() {
         showMessage("funeralMessage", "Funeral created successfully.", true);
         await loadFunerals();
       } catch (error) { showMessage("funeralMessage", error.message); }
-    });
+    }, { signal: listenerController.signal });
     document.getElementById("editFuneralBtn").addEventListener("click", async () => {
       const id = document.getElementById("funeralSelect").value;
       if (!id) return showMessage("funeralMessage", "Select a funeral first.");
@@ -114,7 +116,7 @@ function AdminDashboard() {
         document.getElementById("editFuneralAmount").value = funeral.contribution_amount;
         document.getElementById("editFuneralPanel").classList.remove("hidden");
       } catch (error) { showMessage("funeralMessage", error.message); }
-    });
+    }, { signal: listenerController.signal });
     document.getElementById("editFuneralForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       try {
@@ -129,8 +131,8 @@ function AdminDashboard() {
         await loadFunerals();
         await loadPayments();
       } catch (error) { showMessage("funeralMessage", error.message); }
-    });
-    document.getElementById("cancelEditFuneral").addEventListener("click", () => document.getElementById("editFuneralPanel").classList.add("hidden"));
+    }, { signal: listenerController.signal });
+    document.getElementById("cancelEditFuneral").addEventListener("click", () => document.getElementById("editFuneralPanel").classList.add("hidden"), { signal: listenerController.signal });
     document.getElementById("deleteFuneralBtn").addEventListener("click", async () => {
       const id = document.getElementById("funeralSelect").value;
       if (!id || !window.confirm("Delete this funeral and all its payment records?")) return;
@@ -141,7 +143,7 @@ function AdminDashboard() {
         await loadPayments();
         showMessage("funeralMessage", "Funeral deleted successfully.", true);
       } catch (error) { showMessage("funeralMessage", error.message); }
-    });
+    }, { signal: listenerController.signal });
     document.getElementById("closeSelectedFuneral").addEventListener("click", async () => {
       const id = document.getElementById("funeralSelect").value;
       if (!id) return showMessage("funeralMessage", "Select a funeral first.");
@@ -150,13 +152,13 @@ function AdminDashboard() {
         await loadFunerals();
         showMessage("funeralMessage", "Funeral closed successfully.", true);
       } catch (error) { showMessage("funeralMessage", error.message); }
-    });
+    }, { signal: listenerController.signal });
     document.getElementById("paymentBody").addEventListener("click", async (event) => {
       const button = event.target.closest(".toggle-payment");
       if (!button) return;
       try { await api(`/api/payments/${button.dataset.id}/toggle`, { method: "PUT" }); await loadPayments(); }
       catch (error) { showMessage("funeralMessage", error.message); }
-    });
+    }, { signal: listenerController.signal });
     document.getElementById("memberBody").addEventListener("click", async (event) => {
       const button = event.target.closest("button");
       if (!button) return;
@@ -180,7 +182,7 @@ function AdminDashboard() {
           await loadDependents(button.dataset.id, button.dataset.label);
         }
       } catch (error) { showMessage("memberMessage", error.message); }
-    });
+    }, { signal: listenerController.signal });
     document.getElementById("editMemberForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       try {
@@ -194,8 +196,8 @@ function AdminDashboard() {
         showMessage("memberMessage", "Member updated successfully.", true);
         await loadMembers();
       } catch (error) { showMessage("memberMessage", error.message); }
-    });
-    document.getElementById("cancelEditMember").addEventListener("click", () => document.getElementById("editMemberPanel").classList.add("hidden"));
+    }, { signal: listenerController.signal });
+    document.getElementById("cancelEditMember").addEventListener("click", () => document.getElementById("editMemberPanel").classList.add("hidden"), { signal: listenerController.signal });
     document.getElementById("dependentForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       try {
@@ -210,7 +212,7 @@ function AdminDashboard() {
         showMessage("dependentMessage", "Dependant saved successfully.", true);
         await loadDependents(id, document.getElementById("dependentMemberLabel").textContent);
       } catch (error) { showMessage("dependentMessage", error.message); }
-    });
+    }, { signal: listenerController.signal });
 
     async function loadDependents(memberId, label) {
       const data = await api(`/api/members/${memberId}/dependents`);
@@ -246,10 +248,11 @@ function AdminDashboard() {
           document.getElementById("dependentSubmit").textContent = "Save Dependant";
         }
       } catch (error) { showMessage("dependentMessage", error.message); }
-    });
-    document.getElementById("closeDependents").addEventListener("click", () => document.getElementById("dependentsPanel").classList.add("hidden"));
+    }, { signal: listenerController.signal });
+    document.getElementById("closeDependents").addEventListener("click", () => document.getElementById("dependentsPanel").classList.add("hidden"), { signal: listenerController.signal });
 
     loadDashboardData();
+    return () => listenerController.abort();
   }, []);
 
   return (

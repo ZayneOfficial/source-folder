@@ -1,16 +1,33 @@
-# React + Vite
+# Cape Town Burial Society Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Install on a phone
 
-Currently, two official plugins are available:
+The portal is a Progressive Web App (PWA). Once it is deployed over HTTPS, open
+its web address on the phone:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Android:** Open the site in Chrome, then choose **Install app** or **Add to
+  Home screen** from the browser menu.
+- **iPhone:** Open the site in Safari, tap **Share**, then choose **Add to Home
+  Screen**.
 
-## React Compiler
+The installed app uses the CBS name and icon and opens without the browser
+toolbar. Sign-in and portal data still require an internet connection to reach
+the application server and its database; the service worker only caches the
+app shell and static files.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Build and serve
 
-## Expanding the ESLint configuration
+Install dependencies and create the production build:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```sh
+npm install
+npm run build
+```
+
+The build writes the app, web manifest, and service worker to `dist/`. Serve it
+from the same origin as the `/api` endpoints using HTTPS in production; browsers
+do not allow PWA installation from ordinary insecure HTTP sites. The existing
+Express server serves `dist/` and provides the API.
+
+For local development, run `npm run dev`; the Vite development server proxies
+`/api` requests to `http://localhost:3000`.

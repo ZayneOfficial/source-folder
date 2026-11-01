@@ -15,7 +15,9 @@ function Header({ role }) {
     <header className="app-header">
       <div className="header-inner">
         <div className="header-identity">
-          <div className="header-mark" aria-hidden="true">CBS</div>
+          <div className="header-mark" aria-label="Cape Town Burial Society logo">
+            <img src="/cbs.png" alt="Cape Town Burial Society logo" />
+          </div>
           <div>
             <div className="header-kicker">Cape Town Burial Society</div>
             <div className="header-title">{role} workspace</div>

@@ -44,7 +44,9 @@ function LoginPage() {
       <div className="login-shell">
         <aside className="login-aside">
           <div className="login-brand">
-            <div className="login-mark" aria-hidden="true">CBS</div>
+            <div className="login-mark" aria-label="Cape Town Burial Society logo">
+              <img src="/cbs.png" alt="Cape Town Burial Society logo" />
+            </div>
             <div>
               <span>Cape Town</span>
               <strong>Burial Society</strong>

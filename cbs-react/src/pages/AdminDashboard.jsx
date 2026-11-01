@@ -22,6 +22,16 @@ function AdminDashboard() {
       element.className = `message ${success ? "success" : "error"}`;
     }
 
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character]);
+    }
+
     async function loadMembers() {
       const search = document.getElementById("memberSearch").value;
       const data = await api(`/api/members?limit=50&search=${encodeURIComponent(search)}`);
@@ -34,6 +44,33 @@ function AdminDashboard() {
         <button class="btn btn-dark manage-dependents" data-id="${member._id}" data-label="${member.vn_number} - ${member.name} ${member.surname}">Dependants</button>
         <button class="btn btn-red delete-member" data-id="${member._id}">Delete</button></td></tr>
       `).join("") || '<tr><td colspan="7" class="empty">No members found.</td></tr>';
+    }
+
+    async function loadPendingDependents() {
+      const data = await api("/api/dependent-requests");
+      const requests = data.dependents || [];
+      document.getElementById("dependentRequestSummary").textContent =
+        `${requests.length} pending dependant request${requests.length === 1 ? "" : "s"}`;
+      document.getElementById("approveAllDependents").disabled = requests.length === 0;
+      document.getElementById("dependentRequestBody").innerHTML = requests.map((dependent) => {
+        const member = dependent.member;
+        const memberLabel = member
+          ? `${member.vn_number} - ${member.name} ${member.surname}`
+          : "Member record unavailable";
+
+        return `<tr>
+          <td>${escapeHtml(member?.vn_number || "-")}</td>
+          <td>${escapeHtml(member ? `${member.name} ${member.surname}` : "Unknown member")}</td>
+          <td>${escapeHtml(dependent.name)}</td>
+          <td>${escapeHtml(dependent.surname)}</td>
+          <td>${escapeHtml(dependent.relationship)}</td>
+          <td>${new Date(dependent.date_of_birth).toLocaleDateString("en-ZA")}</td>
+          <td>
+            <button class="btn btn-green review-dependent" data-decision="approve" data-id="${escapeHtml(dependent._id)}" aria-label="Approve ${escapeHtml(dependent.name)} for ${escapeHtml(memberLabel)}">Approve</button>
+            <button class="btn btn-red review-dependent" data-decision="reject" data-id="${escapeHtml(dependent._id)}" aria-label="Reject ${escapeHtml(dependent.name)} for ${escapeHtml(memberLabel)}">Reject</button>
+          </td>
+        </tr>`;
+      }).join("") || '<tr><td colspan="7" class="empty">No pending dependant requests.</td></tr>';
     }
 
     async function loadFunerals() {
@@ -72,7 +109,37 @@ function AdminDashboard() {
       } catch (loadError) {
         showMessage("memberMessage", loadError.message);
       }
+      try {
+        await loadPendingDependents();
+      } catch (loadError) {
+        showMessage("dependentRequestMessage", loadError.message);
+      }
     }
+
+    document.getElementById("refreshDependentRequests").addEventListener("click", () => {
+      loadPendingDependents().catch((error) => showMessage("dependentRequestMessage", error.message));
+    }, { signal: listenerController.signal });
+    document.getElementById("approveAllDependents").addEventListener("click", async () => {
+      if (!window.confirm("Approve all pending dependant requests?")) return;
+      try {
+        const data = await api("/api/dependent-requests/approve-all", { method: "PUT" });
+        showMessage("dependentRequestMessage", data.message, true);
+        await loadPendingDependents();
+      } catch (error) {
+        showMessage("dependentRequestMessage", error.message);
+      }
+    }, { signal: listenerController.signal });
+    document.getElementById("dependentRequestBody").addEventListener("click", async (event) => {
+      const button = event.target.closest(".review-dependent");
+      if (!button) return;
+      try {
+        const data = await api(`/api/dependent-requests/${button.dataset.id}/${button.dataset.decision}`, { method: "PUT" });
+        showMessage("dependentRequestMessage", data.message, true);
+        await loadPendingDependents();
+      } catch (error) {
+        showMessage("dependentRequestMessage", error.message);
+      }
+    }, { signal: listenerController.signal });
 
     document.getElementById("funeralSelect").addEventListener("change", () => loadPayments().catch((error) => showMessage("funeralMessage", error.message)), { signal: listenerController.signal });
     document.getElementById("paymentSearch").addEventListener("input", () => loadPayments().catch((error) => showMessage("funeralMessage", error.message)), { signal: listenerController.signal });
@@ -221,10 +288,10 @@ function AdminDashboard() {
       document.getElementById("dependentMemberLabel").textContent = label;
       panel.classList.remove("hidden");
       document.getElementById("dependentBody").innerHTML = data.dependents.map((dependent) => `<tr>
-        <td>${dependent.name}</td><td>${dependent.surname}</td><td>${dependent.relationship}</td>
-        <td>${new Date(dependent.date_of_birth).toLocaleDateString("en-ZA")}</td><td>${dependent.status}</td>
-        <td><button class="btn btn-primary edit-dependent" data-id="${dependent._id}">Edit</button>
-        <button class="btn btn-red delete-dependent" data-id="${dependent._id}">Delete</button></td></tr>`).join("") || '<tr><td colspan="6" class="empty">No dependants registered.</td></tr>';
+        <td>${escapeHtml(dependent.name)}</td><td>${escapeHtml(dependent.surname)}</td><td>${escapeHtml(dependent.relationship)}</td>
+        <td>${new Date(dependent.date_of_birth).toLocaleDateString("en-ZA")}</td><td>${escapeHtml(dependent.status)}</td>
+        <td><button class="btn btn-primary edit-dependent" data-id="${escapeHtml(dependent._id)}">Edit</button>
+        <button class="btn btn-red delete-dependent" data-id="${escapeHtml(dependent._id)}">Delete</button></td></tr>`).join("") || '<tr><td colspan="6" class="empty">No dependants registered.</td></tr>';
       document.getElementById("dependentBody").closest(".table-wrap").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
@@ -417,6 +484,43 @@ function AdminDashboard() {
                 <tbody id="approvalBody">
                   <tr>
                     <td colSpan="9" className="empty">Loading pending changes...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="card">
+            <div className="section-title">
+              <h2>Pending Dependant Requests</h2>
+              <div className="toolbar">
+                <button className="btn btn-light" type="button" id="refreshDependentRequests">
+                  Refresh
+                </button>
+                <button className="btn btn-green" type="button" id="approveAllDependents" disabled>
+                  Approve All
+                </button>
+              </div>
+            </div>
+
+            <div id="dependentRequestMessage" className="message" role="status"></div>
+            <div id="dependentRequestSummary" className="small">Loading pending requests...</div>
+            <div className="table-wrap" style={{ marginTop: '10px' }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Member VN</th>
+                    <th>Member</th>
+                    <th>Dependant Name</th>
+                    <th>Surname</th>
+                    <th>Relationship</th>
+                    <th>Date of Birth</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dependentRequestBody">
+                  <tr>
+                    <td colSpan="7" className="empty">Loading pending requests...</td>
                   </tr>
                 </tbody>
               </table>
@@ -657,8 +761,10 @@ function AdminDashboard() {
                 <div>
                   <label>Status</label>
                   <select id="dependentStatus">
+                    <option value="Pending">Pending</option>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
+                    <option value="Rejected">Rejected</option>
                   </select>
                 </div>
 

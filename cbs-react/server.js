@@ -66,8 +66,8 @@ const dependentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Active", "Inactive"],
-    default: "Active"
+    enum: ["Pending", "Active", "Inactive", "Rejected"],
+    default: "Pending"
   },
   created_at: {
     type: Date,
@@ -82,6 +82,32 @@ function isChildAgeValid(dateOfBirth) {
   const today = new Date();
   const cutoff = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
   return dob >= cutoff && dob <= today;
+}
+
+function validateDependentDetails(body) {
+  const name = String(body.name || "").trim();
+  const surname = String(body.surname || "").trim();
+  const relationship = String(body.relationship || "").trim();
+  const dateOfBirth = body.date_of_birth;
+
+  if (!name || !surname || !["Wife", "Child"].includes(relationship) || !dateOfBirth) {
+    return { error: "Name, surname, relationship and date of birth are required." };
+  }
+
+  const parsedDate = new Date(dateOfBirth);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return { error: "Invalid date of birth." };
+  }
+
+  if (parsedDate > new Date()) {
+    return { error: "Date of birth cannot be in the future." };
+  }
+
+  if (relationship === "Child" && !isChildAgeValid(parsedDate)) {
+    return { error: "Children registered as dependants must be 18 years old or younger." };
+  }
+
+  return { details: { name, surname, relationship, date_of_birth: parsedDate } };
 }
 
 const funeralSchema = new mongoose.Schema({
@@ -1434,8 +1460,7 @@ app.put("/api/payment-change-requests/:id/reject", ...requireRole("admin"), asyn
 // ============================================================
 // DEPENDANTS MANAGEMENT
 // Dependants belong to one member and can be a Wife or Child.
-// Only admins can add/edit/delete dependants.
-// Members can view their own dependants through /api/member-payments/:vn.
+// Members can submit pending dependants; admins review or manage them.
 // ============================================================
 
 app.get("/api/members/:id/dependents", ...requireRole("admin"), async (req, res) => {
@@ -1460,6 +1485,112 @@ app.get("/api/members/:id/dependents", ...requireRole("admin"), async (req, res)
   }
 });
 
+app.post("/api/member/dependents", ...requireRole("member"), async (req, res) => {
+  try {
+    const member = await Member.findById(req.auth.user_id).select("_id").lean();
+    if (!member) {
+      return res.status(404).json({ message: "Member not found." });
+    }
+
+    const validation = validateDependentDetails(req.body);
+    if (validation.error) {
+      return res.status(400).json({ message: validation.error });
+    }
+
+    const dependent = await Dependent.create({
+      member_id: member._id,
+      ...validation.details,
+      status: "Pending"
+    });
+
+    res.status(201).json({
+      message: "Dependant submitted for admin approval.",
+      dependent
+    });
+  } catch (err) {
+    console.error("Member dependant submission error:", err);
+    res.status(500).json({ message: "Could not submit dependant for approval." });
+  }
+});
+
+app.get("/api/dependent-requests", ...requireRole("admin"), async (req, res) => {
+  try {
+    const dependents = await Dependent.find({ status: "Pending" })
+      .sort({ created_at: 1, _id: 1 })
+      .lean();
+    const members = await Member.find({
+      _id: { $in: dependents.map((dependent) => dependent.member_id) }
+    }).select("_id vn_number name surname").lean();
+    const memberById = new Map(members.map((member) => [String(member._id), member]));
+
+    res.json({
+      dependents: dependents.map((dependent) => ({
+        ...dependent,
+        member: memberById.get(String(dependent.member_id)) || null
+      }))
+    });
+  } catch (err) {
+    console.error("Load dependant requests error:", err);
+    res.status(500).json({ message: "Could not load dependant requests." });
+  }
+});
+
+app.put("/api/dependent-requests/approve-all", ...requireRole("admin"), async (req, res) => {
+  try {
+    const result = await Dependent.updateMany(
+      { status: "Pending" },
+      { $set: { status: "Active" } }
+    );
+    res.json({
+      message: `${result.modifiedCount} dependant request(s) approved.`,
+      approved: result.modifiedCount
+    });
+  } catch (err) {
+    console.error("Approve all dependant requests error:", err);
+    res.status(500).json({ message: "Could not approve all dependant requests." });
+  }
+});
+
+app.put("/api/dependent-requests/:id/:decision", ...requireRole("admin"), async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid dependant request ID." });
+    }
+
+    const decisionStatus = {
+      approve: "Active",
+      reject: "Rejected"
+    }[req.params.decision];
+    if (!decisionStatus) {
+      return res.status(400).json({ message: "Decision must be approve or reject." });
+    }
+
+    const dependent = await Dependent.findOneAndUpdate(
+      { _id: req.params.id, status: "Pending" },
+      { $set: { status: decisionStatus } },
+      { new: true, runValidators: true }
+    );
+    if (!dependent) {
+      const exists = await Dependent.exists({ _id: req.params.id });
+      return res.status(exists ? 409 : 404).json({
+        message: exists
+          ? "This dependant request has already been reviewed."
+          : "Dependant request not found."
+      });
+    }
+
+    res.json({
+      message: req.params.decision === "approve"
+        ? "Dependant request approved."
+        : "Dependant request rejected.",
+      dependent
+    });
+  } catch (err) {
+    console.error("Review dependant request error:", err);
+    res.status(500).json({ message: "Could not review dependant request." });
+  }
+});
+
 app.post("/api/members/:id/dependents", ...requireRole("admin"), async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -1471,39 +1602,17 @@ app.post("/api/members/:id/dependents", ...requireRole("admin"), async (req, res
       return res.status(404).json({ message: "Member not found." });
     }
 
-    const name = String(req.body.name || "").trim();
-    const surname = String(req.body.surname || "").trim();
-    const relationship = String(req.body.relationship || "").trim();
-    const dateOfBirth = req.body.date_of_birth;
-    const status = req.body.status === "Inactive" ? "Inactive" : "Active";
-
-    if (!name || !surname || !["Wife", "Child"].includes(relationship) || !dateOfBirth) {
-      return res.status(400).json({
-        message: "Name, surname, relationship and date of birth are required."
-      });
+    const validation = validateDependentDetails(req.body);
+    if (validation.error) {
+      return res.status(400).json({ message: validation.error });
     }
-
-    const parsedDate = new Date(dateOfBirth);
-    if (Number.isNaN(parsedDate.getTime())) {
-      return res.status(400).json({ message: "Invalid date of birth." });
-    }
-
-    if (parsedDate > new Date()) {
-      return res.status(400).json({ message: "Date of birth cannot be in the future." });
-    }
-
-    if (relationship === "Child" && !isChildAgeValid(parsedDate)) {
-      return res.status(400).json({
-        message: "Children registered as dependants must be 18 years old or younger."
-      });
-    }
+    const status = ["Active", "Inactive"].includes(req.body.status)
+      ? req.body.status
+      : "Active";
 
     const dependent = await Dependent.create({
       member_id: member._id,
-      name,
-      surname,
-      relationship,
-      date_of_birth: parsedDate,
+      ...validation.details,
       status
     });
 
@@ -1525,38 +1634,15 @@ app.put("/api/dependents/:id", ...requireRole("admin"), async (req, res) => {
       return res.status(404).json({ message: "Dependant not found." });
     }
 
-    const name = String(req.body.name || "").trim();
-    const surname = String(req.body.surname || "").trim();
-    const relationship = String(req.body.relationship || "").trim();
-    const dateOfBirth = req.body.date_of_birth;
-    const status = req.body.status === "Inactive" ? "Inactive" : "Active";
-
-    if (!name || !surname || !["Wife", "Child"].includes(relationship) || !dateOfBirth) {
-      return res.status(400).json({
-        message: "Name, surname, relationship and date of birth are required."
-      });
+    const validation = validateDependentDetails(req.body);
+    if (validation.error) {
+      return res.status(400).json({ message: validation.error });
     }
+    const status = ["Pending", "Active", "Inactive", "Rejected"].includes(req.body.status)
+      ? req.body.status
+      : "Active";
 
-    const parsedDate = new Date(dateOfBirth);
-    if (Number.isNaN(parsedDate.getTime())) {
-      return res.status(400).json({ message: "Invalid date of birth." });
-    }
-
-    if (parsedDate > new Date()) {
-      return res.status(400).json({ message: "Date of birth cannot be in the future." });
-    }
-
-    if (relationship === "Child" && !isChildAgeValid(parsedDate)) {
-      return res.status(400).json({
-        message: "Children registered as dependants must be 18 years old or younger."
-      });
-    }
-
-    dependent.name = name;
-    dependent.surname = surname;
-    dependent.relationship = relationship;
-    dependent.date_of_birth = parsedDate;
-    dependent.status = status;
+    Object.assign(dependent, validation.details, { status });
 
     await dependent.save();
 

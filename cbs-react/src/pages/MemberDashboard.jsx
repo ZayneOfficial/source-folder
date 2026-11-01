@@ -15,6 +15,8 @@ function formatMoney(value) {
 function MemberDashboard() {
     const [account, setAccount] = useState(null);
     const [error, setError] = useState("");
+    const [dependentNotice, setDependentNotice] = useState(null);
+    const [isSubmittingDependent, setIsSubmittingDependent] = useState(false);
 
     useEffect(() => {
       async function loadAccount() {
@@ -35,6 +37,38 @@ function MemberDashboard() {
       loadAccount();
     }, []);
 
+    async function handleDependentSubmit(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      setDependentNotice(null);
+      setIsSubmittingDependent(true);
+
+      try {
+        const formData = new FormData(form);
+        const response = await fetch("/api/member/dependents", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(Object.fromEntries(formData.entries())),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Could not submit dependant.");
+        }
+
+        setAccount((current) => ({
+          ...current,
+          dependents: [...(current?.dependents || []), data.dependent],
+        }));
+        form.reset();
+        setDependentNotice({ text: data.message, success: true });
+      } catch (submitError) {
+        setDependentNotice({ text: submitError.message, success: false });
+      } finally {
+        setIsSubmittingDependent(false);
+      }
+    }
+
     const member = account?.member;
     return (
         <>
@@ -51,6 +85,38 @@ function MemberDashboard() {
       </section>
       <section className="card" style={{ marginTop: 14 }}>
         <div className="section-title"><h2>My Dependants</h2></div>
+        <form className="form-grid" onSubmit={handleDependentSubmit}>
+          <div>
+            <label htmlFor="dependentName">Name</label>
+            <input id="dependentName" name="name" required />
+          </div>
+          <div>
+            <label htmlFor="dependentSurname">Surname</label>
+            <input id="dependentSurname" name="surname" required />
+          </div>
+          <div>
+            <label htmlFor="dependentRelationship">Relationship</label>
+            <select id="dependentRelationship" name="relationship" required defaultValue="Wife">
+              <option value="Wife">Wife</option>
+              <option value="Child">Child</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="dependentDateOfBirth">Date of Birth</label>
+            <input id="dependentDateOfBirth" name="date_of_birth" type="date" required />
+            <div className="small">Children must be 18 years old or younger.</div>
+          </div>
+          <div className="full">
+            <button className="btn btn-primary" type="submit" disabled={isSubmittingDependent}>
+              {isSubmittingDependent ? "Submitting..." : "Submit Dependant for Approval"}
+            </button>
+          </div>
+        </form>
+        {dependentNotice && (
+          <div className={`message ${dependentNotice.success ? "success" : "error"}`} role="status">
+            {dependentNotice.text}
+          </div>
+        )}
         <div className="table-wrap">
           <table>
             <thead>
@@ -69,7 +135,7 @@ function MemberDashboard() {
                   <td>{dependent.surname}</td>
                   <td>{dependent.relationship}</td>
                   <td>{formatDate(dependent.date_of_birth)}</td>
-                  <td>{dependent.status}</td>
+                  <td>{dependent.status === "Pending" ? "Pending approval" : dependent.status}</td>
                 </tr>
               )) : <tr><td colSpan="5" className="empty">{account ? "No dependants registered." : "Loading..."}</td></tr>}
             </tbody>

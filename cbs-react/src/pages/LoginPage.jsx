@@ -41,57 +41,35 @@ function LoginPage() {
 
   return (
     <main className="login-page">
-      <div className="login-shell">
-        <aside className="login-aside">
-          <div className="login-brand">
-            <div className="login-mark" aria-label="Cape Town Burial Society logo">
-              <img src="/cbs.png" alt="Cape Town Burial Society logo" />
-            </div>
-            <div>
-              <span>Cape Town</span>
-              <strong>Burial Society</strong>
-            </div>
-          </div>
+      <section className="login-card">
+        <div className="login-logo">
+          <img src="/cbs.png" alt="Cape Town Burial Society logo" />
+        </div>
+        <div className="login-heading">
+          <h2>Sign in</h2>
+        </div>
 
-          <div className="login-message">
-            <p className="eyebrow">COMMUNITY CARE PORTAL</p>
-            <h1>Care, organized<br />around community.</h1>
-            <p>One place for member records, contributions, and the people who support them.</p>
-          </div>
+        <div className="tabs" role="tablist" aria-label="Choose a workspace">
+          {[
+            ["admin", "Admin"],
+            ["member", "Member"],
+            ["helper", "Helper"],
+          ].map(([role, label]) => (
+            <button
+              className={`tab ${activeTab === role ? "active" : ""}`}
+              key={role}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === role}
+              onClick={() => setActiveTab(role)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-          <div className="login-aside-footer">
-            <span className="status-dot" />
-            <span>MEMBERS · HELPERS · ADMINISTRATION</span>
-          </div>
-        </aside>
-
-        <section className="login-card">
-          <div className="login-heading">
-            <p className="eyebrow">MANAGEMENT PORTAL</p>
-            <h2>Sign in</h2>
-            <p>Choose your workspace to continue.</p>
-          </div>
-
-          <div className="tabs" role="tablist" aria-label="Choose a workspace">
-            {[
-              ["admin", "Admin"],
-              ["member", "Member"],
-              ["helper", "Helper"],
-            ].map(([role, label]) => (
-              <button
-                className={`tab ${activeTab === role ? "active" : ""}`}
-                key={role}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === role}
-                onClick={() => setActiveTab(role)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {activeTab === "admin" && <section className="login-panel">
+        {activeTab === "admin" && (
+          <section className="login-panel">
             <form onSubmit={(event) => handleSubmit(event, "admin")}>
               <label>Email</label>
               <input name="email" type="email" placeholder="Admin email" required />
@@ -101,9 +79,11 @@ function LoginPage() {
                 {isSubmitting ? "Signing in..." : "Login as Admin"}
               </button>
             </form>
-          </section>}
+          </section>
+        )}
 
-          {activeTab === "member" && <section className="login-panel">
+        {activeTab === "member" && (
+          <section className="login-panel">
             <form onSubmit={(event) => handleSubmit(event, "member")}>
               <label>VN Number</label>
               <input name="vn_number" placeholder="VN001" required />
@@ -114,9 +94,11 @@ function LoginPage() {
                 {isSubmitting ? "Signing in..." : "Login as Member"}
               </button>
             </form>
-          </section>}
+          </section>
+        )}
 
-          {activeTab === "helper" && <section className="login-panel">
+        {activeTab === "helper" && (
+          <section className="login-panel">
             <form onSubmit={(event) => handleSubmit(event, "helper")}>
               <label>VN Number</label>
               <input name="vn_number" placeholder="VN001" required />
@@ -131,11 +113,10 @@ function LoginPage() {
                 {isSubmitting ? "Signing in..." : "Login as Helper"}
               </button>
             </form>
-          </section>}
-
-          {error && <div className="message error" role="alert">{error}</div>}
-        </section>
-      </div>
+          </section>
+        )}
+        {error && <div className="message error" role="alert">{error}</div>}
+      </section>
     </main>
   );
 }

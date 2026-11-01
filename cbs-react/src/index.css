@@ -67,6 +67,29 @@ button {
   box-shadow: 0 18px 50px #0005;
 }
 
+.login-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.login-logo img {
+  display: block;
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+}
+
+.login-heading {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.login-heading h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -95,7 +118,7 @@ p {
 
 .tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 20px;
 }

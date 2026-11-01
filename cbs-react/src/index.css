@@ -291,12 +291,55 @@ select:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-width: 0;
   gap: 10px;
+}
+
+.header-identity,
+.header-actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+
+.header-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 clamp(36px, 7vw, 52px);
+  width: clamp(36px, 7vw, 52px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.header-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.header-copy {
+  min-width: 0;
+}
+
+.header-actions .btn {
+  flex: none;
+  width: auto;
+}
+
+.header-kicker {
+  color: #b9c0c8;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .header-title {
   font-size: 20px;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .header-sub {
@@ -574,6 +617,20 @@ tbody tr:last-child td {
     font-size: 17px;
   }
 
+  .header-identity,
+  .header-actions {
+    gap: 7px;
+  }
+
+  .header-mark {
+    flex-basis: 38px;
+    width: 38px;
+  }
+
+  .header-kicker {
+    font-size: 9px;
+  }
+
   .header-sub {
     font-size: 11px;
   }
@@ -713,8 +770,20 @@ tbody tr:last-child td {
     gap: 6px;
   }
 
+  .header-identity {
+    flex: 1 1 auto;
+  }
+
+  .header-actions {
+    flex: 0 0 auto;
+  }
+
   .header-title {
-    font-size: 16px;
+    font-size: 14px;
+  }
+
+  .header-sub {
+    display: none;
   }
 
   .app-header .btn {

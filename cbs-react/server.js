@@ -485,6 +485,30 @@ app.get("/api/health", async (req, res) => {
   res.json({ ok: true, database: mongoose.connection.readyState === 1 });
 });
 
+app.get("/api/me", ...requireRole("admin", "helper", "member"), async (req, res) => {
+  try {
+    let user;
+
+    if (req.auth.role === "admin") {
+      user = await Admin.findById(req.auth.user_id).select("name").lean();
+    } else if (req.auth.role === "helper") {
+      user = await Helper.findById(req.auth.user_id).select("name surname").lean();
+    } else {
+      user = await Member.findById(req.auth.user_id).select("name surname").lean();
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "Your account could not be found." });
+    }
+
+    const name = [user.name, user.surname].filter(Boolean).join(" ");
+    res.json({ role: req.auth.role, name });
+  } catch (err) {
+    console.error("Current user lookup error:", err);
+    res.status(500).json({ message: "Could not load your account details." });
+  }
+});
+
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password, vn_number, phone, full_name, helper_password } = req.body;

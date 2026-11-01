@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import LoginPage from "./pages/LoginPage";
@@ -18,6 +19,18 @@ function NotFound() {
 }
 
 function App() {
+  useEffect(() => {
+    const loadingScreen = document.getElementById("loadingScreen");
+    if (!loadingScreen) return undefined;
+
+    const hideTimer = window.setTimeout(() => {
+      loadingScreen.classList.add("launch-screen-hidden");
+      window.setTimeout(() => loadingScreen.remove(), 450);
+    }, 900);
+
+    return () => window.clearTimeout(hideTimer);
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>

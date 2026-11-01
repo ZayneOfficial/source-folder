@@ -8,10 +8,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'cbs.png'],
       manifest: {
-        name: 'Cape Town Burial Society',
-        short_name: 'CBS Portal',
+        name: 'CBS ADMIN',
+        short_name: 'CBS ADMIN',
         description: 'Cape Town Burial Society member and management portal.',
         theme_color: '#173d35',
         background_color: '#edf3ef',

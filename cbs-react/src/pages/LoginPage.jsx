@@ -42,25 +42,26 @@ function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-card">
-        <div className="login-logo">
-          <img src="/cbs.png" alt="Cape Town Burial Society logo" />
-        </div>
-        <div className="login-heading">
-          <h2>Sign in</h2>
+        <div className="brand">
+          <div className="brand-icon">
+            <img src="/cbs.png" alt="Cape Town Burial Society Logo" />
+          </div>
+          <div>
+            <h1>Burial Society</h1>
+            <p>Management System</p>
+          </div>
         </div>
 
-        <div className="tabs" role="tablist" aria-label="Choose a workspace">
+        <div className="tabs">
           {[
-            ["admin", "Admin"],
-            ["member", "Member"],
-            ["helper", "Helper"],
+            ["admin", "Admin Login"],
+            ["member", "Member Login"],
+            ["helper", "Helper Login"],
           ].map(([role, label]) => (
             <button
               className={`tab ${activeTab === role ? "active" : ""}`}
               key={role}
               type="button"
-              role="tab"
-              aria-selected={activeTab === role}
               onClick={() => setActiveTab(role)}
             >
               {label}

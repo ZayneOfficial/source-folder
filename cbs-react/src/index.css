@@ -910,8 +910,8 @@ tbody tr:last-child td {
 }
 
 .brand-icon{
-  width:72px;
-  height:72px;
+  width:64px;
+  height:64px;
   border-radius:12px;
   background:#fff;
   display:grid;

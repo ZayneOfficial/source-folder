@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { toJpeg, toPng } from "html-to-image";
 import "./ContributionReportPage.css";
 
 const INITIAL_ROWS = [
@@ -29,6 +30,7 @@ const INITIAL_ROWS = [
 ];
 
 function ContributionReportPage() {
+  const reportRef = useRef(null);
   const [title, setTitle] = useState("TINASHE MAKONZA FUNERAL");
   const [rows, setRows] = useState(() => INITIAL_ROWS.map((row, id) => ({ ...row, id })));
   const [nextId, setNextId] = useState(INITIAL_ROWS.length);
@@ -36,6 +38,37 @@ function ContributionReportPage() {
   const [totalCash, setTotalCash] = useState("");
   const [firstContact, setFirstContact] = useState("MR NYAMAZAMO: +27 84 784 5074");
   const [secondContact, setSecondContact] = useState("MR CHIKWASHA: +27 676 758 067");
+  const [exportingFormat, setExportingFormat] = useState("");
+  const [exportError, setExportError] = useState("");
+
+  async function downloadImage(format) {
+    if (!reportRef.current) return;
+
+    setExportingFormat(format);
+    setExportError("");
+    try {
+      const options = {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: "#fff",
+        filter: (node) => !node.classList?.contains("report-row-action"),
+      };
+      const imageUrl = format === "png"
+        ? await toPng(reportRef.current, options)
+        : await toJpeg(reportRef.current, { ...options, quality: 0.95 });
+      const filename = title.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase()
+        || "contribution-report";
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `${filename}.${format}`;
+      downloadLink.href = imageUrl;
+      downloadLink.click();
+    } catch (error) {
+      const reason = error instanceof Error ? ` ${error.message}` : "";
+      setExportError(`Could not create the ${format.toUpperCase()} image.${reason}`);
+    } finally {
+      setExportingFormat("");
+    }
+  }
 
   function updateRow(id, key, value) {
     setRows((currentRows) =>
@@ -66,17 +99,34 @@ function ContributionReportPage() {
           <button className="btn btn-light" type="button" onClick={resetReport}>
             Reset template
           </button>
+          <button
+            className="btn btn-light"
+            type="button"
+            disabled={Boolean(exportingFormat)}
+            onClick={() => downloadImage("png")}
+          >
+            {exportingFormat === "png" ? "Creating PNG..." : "Download PNG"}
+          </button>
+          <button
+            className="btn btn-light"
+            type="button"
+            disabled={Boolean(exportingFormat)}
+            onClick={() => downloadImage("jpeg")}
+          >
+            {exportingFormat === "jpeg" ? "Creating JPEG..." : "Download JPEG"}
+          </button>
           <button className="btn btn-primary" type="button" onClick={() => window.print()}>
             Print / Save as PDF
           </button>
         </div>
       </nav>
 
+      {exportError && <p className="report-export-error" role="alert">{exportError}</p>}
       <p className="report-edit-hint">
         Edit the report fields below. Choose “Print / Save as PDF”, then select “Save as PDF” in the print dialog.
       </p>
 
-      <article className="report-sheet" aria-label="Funeral contributions report">
+      <article ref={reportRef} className="report-sheet" aria-label="Funeral contributions report">
         <svg className="report-decoration" viewBox="0 0 210 297" preserveAspectRatio="none" aria-hidden="true">
           <path fill="#009b3a" d="M0 0h48C24 10 18 27 10 47 7 55 4 63 0 68z" />
           <path fill="#ffd500" d="M0 0h41C20 11 15 28 7 48 4 55 2 61 0 64z" />

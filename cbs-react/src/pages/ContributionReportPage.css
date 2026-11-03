@@ -7,6 +7,7 @@
 .report-toolbar,
 .report-toolbar-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
 }
@@ -28,6 +29,13 @@
   max-width: 980px;
   margin: 12px auto;
   color: #475467;
+  font-size: 13px;
+}
+
+.report-export-error {
+  max-width: 980px;
+  margin: 12px auto;
+  color: #b42318;
   font-size: 13px;
 }
 

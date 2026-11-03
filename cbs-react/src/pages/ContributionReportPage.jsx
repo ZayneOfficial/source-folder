@@ -127,6 +127,17 @@ function ContributionReportPage() {
       </p>
 
       <article ref={reportRef} className="report-sheet" aria-label="Funeral contributions report">
+        <svg className="report-decoration" viewBox="0 0 210 297" preserveAspectRatio="none" aria-hidden="true">
+          <path fill="#009b3a" d="M0 0h48C24 10 18 27 10 47 7 55 4 63 0 68z" />
+          <path fill="#ffd500" d="M0 0h41C20 11 15 28 7 48 4 55 2 61 0 64z" />
+          <path fill="#ed1c24" d="M0 0h34C17 12 12 28 5 48 3 54 1 58 0 60z" />
+          <path fill="#009b3a" d="M0 0h27C14 12 9 29 3 48 2 53 1 56 0 58z" />
+          <path fill="#009b3a" d="M210 297h-48c24-10 30-27 38-47 3-8 6-16 10-21z" />
+          <path fill="#ffd500" d="M210 297h-41c21-11 26-28 34-48 3-7 5-13 7-16z" />
+          <path fill="#ed1c24" d="M210 297h-34c17-12 22-28 29-48 2-6 4-10 5-12z" />
+          <path fill="#009b3a" d="M210 297h-27c13-12 18-29 24-48 2-5 3-8 3-10z" />
+        </svg>
+
         <header className="report-brand">
           <img src="/cbs.png" alt="Cape Town Burial Society" />
           <div className="report-brand-name">

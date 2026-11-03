@@ -153,9 +153,6 @@ function ContributionReportPage() {
               <td><input aria-label="Total cash" value={totalCash} onChange={(event) => setTotalCash(event.target.value)} /></td>
               <td className="report-row-action"></td>
             </tr>
-            <tr className="report-spacer-row" aria-hidden="true"><td></td><td></td><td className="report-row-action"></td></tr>
-            <tr className="report-spacer-row" aria-hidden="true"><td></td><td></td><td className="report-row-action"></td></tr>
-            <tr className="report-spacer-row" aria-hidden="true"><td></td><td></td><td className="report-row-action"></td></tr>
           </tbody>
         </table>
 

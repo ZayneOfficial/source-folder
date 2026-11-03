@@ -39,7 +39,7 @@
   min-height: 297mm;
   margin: 0 auto;
   padding: 7mm 15mm 11mm;
-  overflow: hidden;
+  overflow: visible;
   background: #fff;
   box-shadow: 0 5px 24px #17203326;
   color: #111;
@@ -245,8 +245,7 @@
 
   .report-sheet {
     width: 100%;
-    min-height: 0;
-    aspect-ratio: 210 / 297;
+    min-height: calc((100vw - 16px) * 1.4142857);
     padding: 3.3% 7.1% 5.2%;
   }
 
@@ -313,7 +312,6 @@
 
   .report-sheet {
     width: 210mm;
-    height: 297mm;
     min-height: 297mm;
     margin: 0;
     padding: 7mm 15mm 11mm;

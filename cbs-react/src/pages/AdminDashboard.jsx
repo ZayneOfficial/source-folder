@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import Header from "../components/Header";
 
 function AdminDashboard() {
@@ -355,6 +356,9 @@ function AdminDashboard() {
           <section className="card">
             <div className="section-title">
               <h2>Funeral Management</h2>
+              <Link className="btn btn-primary" to="/reports/contributions">
+                Contribution report
+              </Link>
             </div>
 
             <form id="funeralForm" className="form-grid">

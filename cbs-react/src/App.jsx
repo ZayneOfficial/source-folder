@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import HelperDashboard from "./pages/HelperDashboard";
 import MemberDashboard from "./pages/MemberDashboard";
+import ContributionReportPage from "./pages/ContributionReportPage";
 
 function NotFound() {
   return (
@@ -50,6 +51,8 @@ function App() {
         />
 
         <Route path="/member/dashboard" element={<MemberDashboard />} />
+
+        <Route path="/reports/contributions" element={<ContributionReportPage />} />
 
         <Route path="*" element={<NotFound />} />
 

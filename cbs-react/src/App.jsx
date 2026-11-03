@@ -26,7 +26,7 @@ function App() {
     const hideTimer = window.setTimeout(() => {
       loadingScreen.classList.add("launch-screen-hidden");
       window.setTimeout(() => loadingScreen.remove(), 450);
-    }, 900);
+    }, 5000);
 
     return () => window.clearTimeout(hideTimer);
   }, []);

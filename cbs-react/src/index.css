@@ -409,6 +409,10 @@ select:focus {
   margin: 0;
 }
 
+.contribution-report-link {
+  text-decoration: none;
+}
+
 /* =========================
    FORMS / TOOLBARS
 ========================= */

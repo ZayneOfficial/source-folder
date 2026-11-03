@@ -356,7 +356,7 @@ function AdminDashboard() {
           <section className="card">
             <div className="section-title">
               <h2>Funeral Management</h2>
-              <Link className="btn btn-primary" to="/reports/contributions">
+              <Link className="btn btn-primary contribution-report-link" to="/reports/contributions">
                 Contribution report
               </Link>
             </div>

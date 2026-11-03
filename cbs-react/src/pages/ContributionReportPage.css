@@ -119,6 +119,7 @@
 
 .report-table {
   width: 76%;
+  min-width: 0;
   margin: 0 auto;
   border-collapse: collapse;
   table-layout: auto;
@@ -127,10 +128,14 @@
 
 .report-table th,
 .report-table td {
-  height: 4.8mm;
+  height: 7.5mm;
   padding: 0 2mm;
   border: 1px solid #999;
   text-align: left;
+}
+
+.report-table tbody tr:last-child td {
+  border-bottom: 1px solid #999;
 }
 
 .report-table thead th {
@@ -144,7 +149,7 @@
 }
 
 .report-table input {
-  height: 4.6mm;
+  height: 7.3mm;
   font-size: 7pt;
   font-weight: 700;
   text-transform: uppercase;
@@ -177,14 +182,14 @@
 }
 
 .report-spacer-row td {
-  height: 4.8mm;
+  height: 7.5mm;
 }
 
 .report-footer {
   margin-top: auto;
   padding-top: 8mm;
   text-align: center;
-  font-size: 6.5pt;
+  font-size: 7.5pt;
   font-weight: 700;
 }
 
@@ -203,7 +208,7 @@
   width: auto;
   max-width: 48%;
   text-align: center;
-  font-size: 6.5pt;
+  font-size: 7.5pt;
   font-weight: 700;
 }
 
@@ -322,15 +327,16 @@
 
   .report-table {
     width: 76%;
+    min-width: 0;
   }
 
   .report-table th,
   .report-table td {
-    height: 4.8mm;
+    height: 7.5mm;
   }
 
   .report-table input {
-    height: 4.6mm;
+    height: 7.3mm;
   }
 
   .report-title-input,

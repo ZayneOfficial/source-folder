@@ -175,8 +175,8 @@
   min-height: 0;
   padding: 0;
   border: 0;
-  background: transparent;
-  color: #667085;
+  background: var(--blue);
+  color: #fff;
   font-size: 15px;
   line-height: 1;
 }

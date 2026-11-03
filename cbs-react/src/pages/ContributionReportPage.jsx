@@ -94,13 +94,13 @@ function ContributionReportPage() {
   return (
     <main className="contribution-report-page">
       <nav className="report-toolbar" aria-label="Report actions">
-        <Link className="btn btn-light" to="/admin/dashboard">Back to dashboard</Link>
+        <Link className="btn btn-primary" to="/admin/dashboard">Back to dashboard</Link>
         <div className="report-toolbar-actions">
-          <button className="btn btn-light" type="button" onClick={resetReport}>
+          <button className="btn btn-primary" type="button" onClick={resetReport}>
             Reset template
           </button>
           <button
-            className="btn btn-light"
+            className="btn btn-primary"
             type="button"
             disabled={Boolean(exportingFormat)}
             onClick={() => downloadImage("png")}
@@ -108,7 +108,7 @@ function ContributionReportPage() {
             {exportingFormat === "png" ? "Creating PNG..." : "Download PNG"}
           </button>
           <button
-            className="btn btn-light"
+            className="btn btn-primary"
             type="button"
             disabled={Boolean(exportingFormat)}
             onClick={() => downloadImage("jpeg")}
@@ -221,7 +221,7 @@ function ContributionReportPage() {
       </article>
 
       <div className="report-screen-controls" aria-label="Edit report rows">
-        <button className="btn btn-light" type="button" onClick={addRow}>Add branch</button>
+        <button className="btn btn-primary" type="button" onClick={addRow}>Add branch</button>
       </div>
     </main>
   );

@@ -198,17 +198,18 @@
 }
 
 .report-contact-lines {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
   gap: 1.5mm;
 }
 
 .report-contact-lines input {
-  width: auto;
-  max-width: 48%;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
   text-align: center;
-  font-size: 7.5pt;
+  font-size: 6.5pt;
   font-weight: 700;
 }
 
@@ -280,8 +281,8 @@
     justify-content: space-between;
   }
 
-  .report-contact-lines {
-    flex-wrap: wrap;
+  .report-contact-lines input {
+    font-size: 5.5pt;
   }
 }
 

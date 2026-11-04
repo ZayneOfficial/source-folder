@@ -29,6 +29,14 @@ const INITIAL_ROWS = [
   { branch: "BROOKLYN", amount: "R90.00" },
 ];
 
+function getCurrentDateValue() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function ContributionReportPage() {
   const reportRef = useRef(null);
   const [title, setTitle] = useState("TINASHE MAKONZA FUNERAL");
@@ -38,6 +46,7 @@ function ContributionReportPage() {
   const [totalCash, setTotalCash] = useState("");
   const [firstContact, setFirstContact] = useState("MR NYAMAZAMO: +27 84 784 5074");
   const [secondContact, setSecondContact] = useState("MR CHIKWASHA: +27 676 758 067");
+  const [reportDate, setReportDate] = useState(getCurrentDateValue);
   const [exportingFormat, setExportingFormat] = useState("");
   const [exportError, setExportError] = useState("");
 
@@ -89,6 +98,7 @@ function ContributionReportPage() {
     setTotalCash("");
     setFirstContact("MR NYAMAZAMO: +27 84 784 5074");
     setSecondContact("MR CHIKWASHA: +27 676 758 067");
+    setReportDate(getCurrentDateValue());
   }
 
   return (
@@ -216,6 +226,15 @@ function ContributionReportPage() {
           <div className="report-signature">
             <span>SIGNATURE:</span>
             <img className="report-signature-image" src="/signature.png" alt="Signature" />
+            <label className="report-date">
+              <span>DATE:</span>
+              <input
+                aria-label="Report date"
+                type="date"
+                value={reportDate}
+                onChange={(event) => setReportDate(event.target.value)}
+              />
+            </label>
           </div>
         </footer>
       </article>

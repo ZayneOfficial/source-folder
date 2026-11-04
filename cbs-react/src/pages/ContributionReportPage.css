@@ -97,7 +97,8 @@
 
 .report-title-input,
 .report-table input,
-.report-contact-lines input {
+.report-contact-lines input,
+.report-date input {
   display: block;
   width: 100%;
   min-width: 0;
@@ -236,6 +237,20 @@
   height: 12mm;
   object-fit: contain;
   object-position: left center;
+}
+
+.report-date {
+  display: flex;
+  align-items: center;
+  gap: 1.5mm;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.report-date input {
+  width: 27mm;
+  font-size: 6.5pt;
+  font-weight: 700;
 }
 
 .report-screen-controls {

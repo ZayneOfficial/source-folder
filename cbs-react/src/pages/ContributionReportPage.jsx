@@ -4,29 +4,29 @@ import { toJpeg, toPng } from "html-to-image";
 import "./ContributionReportPage.css";
 
 const INITIAL_ROWS = [
-  { branch: "HOUT BAY", amount: "R7 380.00" },
-  { branch: "NEAREST", amount: "R80.00" },
-  { branch: "WYNBERG", amount: "R4 410.00" },
-  { branch: "SEA POINT", amount: "R450.00" },
-  { branch: "KAYELITSHA MARANE", amount: "R7 080.00" },
-  { branch: "NYANGA JUNCTION", amount: "R3 270.00" },
-  { branch: "BLACKHEATH", amount: "R1 230.00" },
-  { branch: "GUGULETHU", amount: "R750.00" },
-  { branch: "KLAMPTUS", amount: "R1 280.00" },
-  { branch: "KAYELITSHA SITE B", amount: "R800.00" },
-  { branch: "MAMALAY", amount: "R90.00" },
-  { branch: "GUGULETHU MALL", amount: "R90.00" },
-  { branch: "FISHHOEK", amount: "R650.00" },
-  { branch: "KOMSA", amount: "R850.00" },
-  { branch: "KUILSRIVER", amount: "R390.00" },
-  { branch: "KRAAIFONTEIN", amount: "R420.00" },
-  { branch: "DEFT", amount: "R330.00" },
-  { branch: "MPULENI", amount: "R330.00" },
-  { branch: "MPAZA", amount: "R180.00" },
-  { branch: "MAITLAND", amount: "R300.00" },
-  { branch: "LANGA", amount: "R168.00" },
-  { branch: "PARKLANDS", amount: "R270.00" },
-  { branch: "BROOKLYN", amount: "R90.00" },
+  { branch: "HOUT BAY", amount: "R00.00" },
+  { branch: "NEAREST", amount: "R00.00" },
+  { branch: "WYNBERG", amount: "R00.00" },
+  { branch: "SEA POINT", amount: "R00.00" },
+  { branch: "KAYELITSHA MARANE", amount: "R00.00" },
+  { branch: "NYANGA JUNCTION", amount: "R00.00" },
+  { branch: "BLACKHEATH", amount: "R00.00" },
+  { branch: "GUGULETHU", amount: "R00.00" },
+  { branch: "KLAMPTUS", amount: "R00.00" },
+  { branch: "KAYELITSHA SITE B", amount: "R00.00" },
+  { branch: "MAMALAY", amount: "R00.00" },
+  { branch: "GUGULETHU MALL", amount: "R00.00" },
+  { branch: "FISHHOEK", amount: "R00.00" },
+  { branch: "KOMSA", amount: "R00.00" },
+  { branch: "KUILSRIVER", amount: "R00.00" },
+  { branch: "KRAAIFONTEIN", amount: "R00.00" },
+  { branch: "DEFT", amount: "R00.00" },
+  { branch: "MPULENI", amount: "R00.00" },
+  { branch: "MPAZA", amount: "R00.00" },
+  { branch: "MAITLAND", amount: "R00.00" },
+  { branch: "LANGA", amount: "R00.00" },
+  { branch: "PARKLANDS", amount: "R00.00" },
+  { branch: "BROOKLYN", amount: "R00.00" },
 ];
 
 function getCurrentDateValue() {
@@ -42,8 +42,8 @@ function ContributionReportPage() {
   const [title, setTitle] = useState("TINASHE MAKONZA FUNERAL");
   const [rows, setRows] = useState(() => INITIAL_ROWS.map((row, id) => ({ ...row, id })));
   const [nextId, setNextId] = useState(INITIAL_ROWS.length);
-  const [expenses, setExpenses] = useState("");
-  const [totalCash, setTotalCash] = useState("");
+  const [expenses, setExpenses] = useState("R00.00");
+  const [totalCash, setTotalCash] = useState("R00.00");
   const [firstContact, setFirstContact] = useState("MR NYAMAZAMO: +27 84 784 5074");
   const [secondContact, setSecondContact] = useState("MR CHIKWASHA: +27 676 758 067");
   const [reportDate, setReportDate] = useState(getCurrentDateValue);
@@ -86,7 +86,7 @@ function ContributionReportPage() {
   }
 
   function addRow() {
-    setRows((currentRows) => [...currentRows, { id: nextId, branch: "", amount: "" }]);
+    setRows((currentRows) => [...currentRows, { id: nextId, branch: "", amount: "R00.00" }]);
     setNextId((currentId) => currentId + 1);
   }
 
@@ -94,8 +94,8 @@ function ContributionReportPage() {
     setTitle("TINASHE MAKONZA FUNERAL");
     setRows(INITIAL_ROWS.map((row, id) => ({ ...row, id })));
     setNextId(INITIAL_ROWS.length);
-    setExpenses("");
-    setTotalCash("");
+    setExpenses("R00.00");
+    setTotalCash("R00.00");
     setFirstContact("MR NYAMAZAMO: +27 84 784 5074");
     setSecondContact("MR CHIKWASHA: +27 676 758 067");
     setReportDate(getCurrentDateValue());

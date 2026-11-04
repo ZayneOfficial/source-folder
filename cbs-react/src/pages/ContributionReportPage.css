@@ -223,15 +223,19 @@
 
 .report-signature {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 1.5mm;
   margin-top: 5mm;
   text-align: left;
 }
 
-.report-signature-line {
-  width: 35mm;
-  border-bottom: 1px dotted #222;
+.report-signature-image {
+  display: block;
+  width: auto;
+  max-width: 35mm;
+  height: 12mm;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .report-screen-controls {

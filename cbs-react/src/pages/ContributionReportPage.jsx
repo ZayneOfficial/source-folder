@@ -215,7 +215,7 @@ function ContributionReportPage() {
           </div>
           <div className="report-signature">
             <span>SIGNATURE:</span>
-            <span className="report-signature-line"></span>
+            <img className="report-signature-image" src="/signature.png" alt="Signature" />
           </div>
         </footer>
       </article>

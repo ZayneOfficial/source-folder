@@ -15,6 +15,16 @@ toolbar. Sign-in and portal data still require an internet connection to reach
 the application server and its database; the service worker only caches the
 app shell and static files.
 
+## Analytics and login audit
+
+Admins can open **Analytics** from the portal header to review page visits and
+login attempts. The audit records IP addresses and the admin email or
+member/helper VN number, along with the time and outcome. It does not record
+passwords or full names entered at sign-in. Newly collected visitor and login
+audit records are automatically deleted after 90 days. When deployed behind a
+reverse proxy, configure Express to trust only that proxy so `req.ip` resolves
+to the visitor's address.
+
 ## Build and serve
 
 Install dependencies and create the production build:

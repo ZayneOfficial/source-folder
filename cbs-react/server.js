@@ -351,6 +351,10 @@ const visitSchema = new mongoose.Schema({
     type: String,
     default: "/"
   },
+  ip_address: {
+    type: String,
+    default: ""
+  },
   user_agent: {
     type: String,
     default: ""
@@ -363,10 +367,60 @@ const visitSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
     index: true
+  },
+  expires_at: {
+    type: Date,
+    expires: 0
   }
 }, { collection: "website_visits" });
 
 const WebsiteVisit = mongoose.model("WebsiteVisit", visitSchema);
+
+const loginAttemptSchema = new mongoose.Schema({
+  role: {
+    type: String,
+    enum: ["admin", "helper", "member", "unknown"],
+    required: true
+  },
+  identifier: {
+    type: String,
+    default: "",
+    maxlength: 160
+  },
+  ip_address: {
+    type: String,
+    default: ""
+  },
+  status: {
+    type: String,
+    enum: ["success", "failed", "blocked", "error"],
+    required: true
+  },
+  attempted_at: {
+    type: Date,
+    default: Date.now,
+    expires: 60 * 60 * 24 * 90
+  }
+}, { collection: "login_attempts" });
+
+const LoginAttempt = mongoose.model("LoginAttempt", loginAttemptSchema);
+
+async function recordLoginAttempt(req, { role, identifier, status }) {
+  try {
+    const normalizedIdentifier = role === "admin"
+      ? String(identifier || "").trim().toLowerCase()
+      : String(identifier || "").trim();
+
+    await LoginAttempt.create({
+      role,
+      identifier: normalizedIdentifier.slice(0, 160),
+      ip_address: req.ip || "",
+      status
+    });
+  } catch (err) {
+    console.error("Login audit recording error:", err);
+  }
+}
 
 // ============================================================
 // SYNC CURRENT MEMBERS INTO AN EXISTING FUNERAL
@@ -452,8 +506,10 @@ app.post("/api/visits", async (req, res) => {
   try {
     await WebsiteVisit.create({
       page: String(req.body.page || "/").slice(0, 200),
+      ip_address: req.ip || "",
       user_agent: String(req.get("user-agent") || "").slice(0, 500),
-      referrer: String(req.get("referer") || "").slice(0, 500)
+      referrer: String(req.get("referer") || "").slice(0, 500),
+      expires_at: new Date(Date.now() + 60 * 60 * 24 * 90 * 1000)
     });
 
     res.status(201).json({ success: true });
@@ -507,6 +563,65 @@ app.get("/api/visits/stats", ...requireRole("admin"), async (req, res) => {
   }
 });
 
+app.get("/api/analytics", ...requireRole("admin"), async (req, res) => {
+  try {
+    res.set("Cache-Control", "no-store");
+    const pageSize = 50;
+    const requestedVisitPage = Math.max(Number.parseInt(req.query.visitPage, 10) || 1, 1);
+    const requestedLoginPage = Math.max(Number.parseInt(req.query.loginPage, 10) || 1, 1);
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const retentionStart = new Date(now.getTime() - 60 * 60 * 24 * 90 * 1000);
+    const [today, thisWeek, thisMonth, visitTotal, loginTotal] = await Promise.all([
+      WebsiteVisit.countDocuments({ visited_at: { $gte: startOfDay } }),
+      WebsiteVisit.countDocuments({ visited_at: { $gte: startOfWeek } }),
+      WebsiteVisit.countDocuments({ visited_at: { $gte: startOfMonth } }),
+      WebsiteVisit.countDocuments({ visited_at: { $gte: retentionStart } }),
+      LoginAttempt.countDocuments()
+    ]);
+    const visitPages = Math.max(1, Math.ceil(visitTotal / pageSize));
+    const loginPages = Math.max(1, Math.ceil(loginTotal / pageSize));
+    const visitPage = Math.min(requestedVisitPage, visitPages);
+    const loginPage = Math.min(requestedLoginPage, loginPages);
+    const [visits, loginAttempts] = await Promise.all([
+      WebsiteVisit.find({ visited_at: { $gte: retentionStart } })
+        .sort({ visited_at: -1 })
+        .skip((visitPage - 1) * pageSize)
+        .limit(pageSize)
+        .lean(),
+      LoginAttempt.find()
+        .sort({ attempted_at: -1 })
+        .skip((loginPage - 1) * pageSize)
+        .limit(pageSize)
+        .lean()
+    ]);
+
+    res.json({
+      stats: { today, thisWeek, thisMonth, total: visitTotal },
+      visits,
+      loginAttempts,
+      pagination: {
+        visitPage,
+        visitPages,
+        visitTotal,
+        loginPage,
+        loginPages,
+        loginTotal
+      }
+    });
+  } catch (err) {
+    console.error("Analytics loading error:", err);
+    res.status(500).json({ message: "Could not load analytics." });
+  }
+});
+
 app.get("/api/health", async (req, res) => {
   res.json({ ok: true, database: mongoose.connection.readyState === 1 });
 });
@@ -536,17 +651,30 @@ app.get("/api/me", ...requireRole("admin", "helper", "member"), async (req, res)
 });
 
 app.post("/api/login", async (req, res) => {
-  try {
-    const { email, password, vn_number, phone, full_name, helper_password } = req.body;
-    
+  const body = req.body || {};
+  const attemptRole = ["admin", "helper", "member"].includes(body.role)
+    ? body.role
+    : body.email
+      ? "admin"
+      : body.helper_password
+        ? "helper"
+        : body.vn_number
+          ? "member"
+          : "unknown";
+  const attemptIdentifier = attemptRole === "admin" ? body.email : body.vn_number;
 
-    if (email && password) {
+  try {
+    const { email, password, vn_number, phone, full_name, helper_password } = body;
+
+    if (attemptRole === "admin" && email && password) {
       const admin = await Admin.findOne({ email: String(email).toLowerCase().trim() });
       if (!admin || !(await bcrypt.compare(String(password), admin.password))) {
+        await recordLoginAttempt(req, { role: "admin", identifier: email, status: "failed" });
         return res.status(401).json({ message: "Invalid admin email or password." });
       }
       const token = await createSession({ role: "admin", userId: admin._id });
       setSessionCookie(res, token);
+      await recordLoginAttempt(req, { role: "admin", identifier: admin.email, status: "success" });
       return res.json({
         role: "admin",
         admin: { name: admin.name, email: admin.email }
@@ -554,12 +682,13 @@ app.post("/api/login", async (req, res) => {
     }
 
     // Helper login: existing member VN + full name + shared helper password
-if (vn_number && full_name && helper_password) {
+if (attemptRole === "helper" && vn_number && full_name && helper_password) {
   const member = await Member.findOne({
     vn_number: String(vn_number).trim()
   });
 
   if (!member) {
+    await recordLoginAttempt(req, { role: "helper", identifier: vn_number, status: "failed" });
     return res.status(401).json({
       message: "Invalid VN Number or full name."
     });
@@ -576,18 +705,21 @@ if (vn_number && full_name && helper_password) {
     .toLowerCase();
 
   if (submittedName !== memberName) {
+    await recordLoginAttempt(req, { role: "helper", identifier: vn_number, status: "failed" });
     return res.status(401).json({
       message: "Invalid VN Number or full name."
     });
   }
 
   if (String(helper_password) !== String(process.env.HELPER_PASSWORD || "")) {
+    await recordLoginAttempt(req, { role: "helper", identifier: vn_number, status: "failed" });
     return res.status(401).json({
       message: "Invalid helper password."
     });
   }
 
   if (member.status !== "Active") {
+    await recordLoginAttempt(req, { role: "helper", identifier: vn_number, status: "blocked" });
     return res.status(403).json({
       message: "This member account is inactive."
     });
@@ -608,6 +740,7 @@ if (vn_number && full_name && helper_password) {
   }
 
   if (helper.status !== "Active") {
+    await recordLoginAttempt(req, { role: "helper", identifier: vn_number, status: "blocked" });
     return res.status(403).json({
       message: "This helper account is inactive."
     });
@@ -619,6 +752,7 @@ if (vn_number && full_name && helper_password) {
     vnNumber: member.vn_number
   });
   setSessionCookie(res, token);
+  await recordLoginAttempt(req, { role: "helper", identifier: member.vn_number, status: "success" });
   return res.json({
     role: "helper",
     helper: {
@@ -631,7 +765,7 @@ if (vn_number && full_name && helper_password) {
   });
 }
 
-    if (vn_number && req.body.full_name) {
+    if (attemptRole === "member" && vn_number && full_name) {
   const fullName = String(req.body.full_name)
     .trim()
     .replace(/\s+/g, " ")
@@ -642,6 +776,7 @@ if (vn_number && full_name && helper_password) {
   });
 
   if (!member) {
+    await recordLoginAttempt(req, { role: "member", identifier: vn_number, status: "failed" });
     return res.status(401).json({ message: "Invalid VN Number or full name." });
   }
 
@@ -651,6 +786,7 @@ if (vn_number && full_name && helper_password) {
     .toLowerCase();
 
   if (memberFullName !== fullName) {
+    await recordLoginAttempt(req, { role: "member", identifier: vn_number, status: "failed" });
     return res.status(401).json({ message: "Invalid VN Number or full name." });
   }
 
@@ -660,17 +796,28 @@ if (vn_number && full_name && helper_password) {
     vnNumber: member.vn_number
   });
   setSessionCookie(res, token);
+  await recordLoginAttempt(req, { role: "member", identifier: member.vn_number, status: "success" });
   return res.json({
     role: "member",
     member: publicMember(member)
   });
 }
 
+await recordLoginAttempt(req, {
+  role: attemptRole,
+  identifier: attemptIdentifier,
+  status: "failed"
+});
 return res.status(400).json({
   message: "Provide admin email/password or member VN/full name."
 });
   } catch (err) {
-    console.error(err);
+    console.error("Login error:", err);
+    await recordLoginAttempt(req, {
+      role: attemptRole,
+      identifier: attemptIdentifier,
+      status: "error"
+    });
     res.status(500).json({ message: "Login failed." });
   }
 });

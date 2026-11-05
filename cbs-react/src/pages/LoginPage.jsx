@@ -14,6 +14,7 @@ function LoginPage() {
 
     const formData = new FormData(event.currentTarget);
     const payload = Object.fromEntries(formData.entries());
+    payload.role = role;
 
     try {
       const response = await fetch("/api/login", {

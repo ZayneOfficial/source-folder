@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Header({ role }) {
   const [userName, setUserName] = useState("");
@@ -59,6 +59,11 @@ function Header({ role }) {
           <span className="header-sub" role={accountError ? "alert" : undefined}>
             {accountError || "Management portal"}
           </span>
+          {role.toLowerCase() === "admin" && (
+            <Link className="btn btn-light admin-analytics-link" to="/admin/analytics">
+              Analytics
+            </Link>
+          )}
           <button className="btn btn-light" type="button" onClick={handleLogout}>
             Log out <span aria-hidden="true">↗</span>
           </button>

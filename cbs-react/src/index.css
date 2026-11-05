@@ -151,6 +151,12 @@ select:focus {
   line-height: 1.2;
 }
 
+a.btn,
+a.btn:hover,
+a.btn:focus {
+  text-decoration: none;
+}
+
 .btn-link {
   text-decoration: none;
 }

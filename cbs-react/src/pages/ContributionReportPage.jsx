@@ -29,6 +29,8 @@ const INITIAL_ROWS = [
   { branch: "BROOKLYN", amount: "R00.00" },
 ];
 
+const REPORT_STORAGE_KEY = "cbs.contributionReport";
+
 function getCurrentDateValue() {
   const date = new Date();
   const year = date.getFullYear();
@@ -37,18 +39,72 @@ function getCurrentDateValue() {
   return `${year}-${month}-${day}`;
 }
 
+function createInitialReport() {
+  return {
+    title: "TINASHE MAKONZA FUNERAL",
+    rows: INITIAL_ROWS.map((row, id) => ({ ...row, id })),
+    nextId: INITIAL_ROWS.length,
+    expenses: "R00.00",
+    totalCash: "R00.00",
+    firstContact: "MR NYAMAZAMO: +27 84 784 5074",
+    secondContact: "MR CHIKWASHA: +27 676 758 067",
+    reportDate: getCurrentDateValue(),
+  };
+}
+
+function isValidSavedReport(value) {
+  return value
+    && typeof value.title === "string"
+    && Array.isArray(value.rows)
+    && value.rows.every((row) =>
+      Number.isInteger(row.id)
+      && typeof row.branch === "string"
+      && typeof row.amount === "string")
+    && Number.isInteger(value.nextId)
+    && ["expenses", "totalCash", "firstContact", "secondContact", "reportDate"]
+      .every((key) => typeof value[key] === "string");
+}
+
+function loadSavedReport() {
+  try {
+    const saved = localStorage.getItem(REPORT_STORAGE_KEY);
+    if (!saved) return { report: createInitialReport(), error: "" };
+
+    const report = JSON.parse(saved);
+    if (!isValidSavedReport(report)) {
+      throw new Error("Saved report data is invalid.");
+    }
+
+    return { report, error: "" };
+  } catch (error) {
+    const reason = error instanceof Error ? ` ${error.message}` : "";
+    return {
+      report: createInitialReport(),
+      error: `Could not load the saved report.${reason}`,
+    };
+  }
+}
+
 function ContributionReportPage() {
   const reportRef = useRef(null);
-  const [title, setTitle] = useState("TINASHE MAKONZA FUNERAL");
-  const [rows, setRows] = useState(() => INITIAL_ROWS.map((row, id) => ({ ...row, id })));
-  const [nextId, setNextId] = useState(INITIAL_ROWS.length);
-  const [expenses, setExpenses] = useState("R00.00");
-  const [totalCash, setTotalCash] = useState("R00.00");
-  const [firstContact, setFirstContact] = useState("MR NYAMAZAMO: +27 84 784 5074");
-  const [secondContact, setSecondContact] = useState("MR CHIKWASHA: +27 676 758 067");
-  const [reportDate, setReportDate] = useState(getCurrentDateValue);
+  const [initialSavedReport] = useState(loadSavedReport);
+  const [report, setReport] = useState(initialSavedReport.report);
+  const [saveError, setSaveError] = useState(initialSavedReport.error);
   const [exportingFormat, setExportingFormat] = useState("");
   const [exportError, setExportError] = useState("");
+  const { title, rows, expenses, totalCash, firstContact, secondContact, reportDate } = report;
+
+  function updateReport(updater) {
+    const updatedReport = typeof updater === "function" ? updater(report) : updater;
+    setReport(updatedReport);
+    try {
+      localStorage.setItem(REPORT_STORAGE_KEY, JSON.stringify(updatedReport));
+      setSaveError("");
+    } catch (error) {
+      const reason = error instanceof Error ? ` ${error.message}` : "";
+      setSaveError(`Could not save the report on this device.${reason}`);
+    }
+  }
 
   async function downloadImage(format) {
     if (!reportRef.current) return;
@@ -80,25 +136,22 @@ function ContributionReportPage() {
   }
 
   function updateRow(id, key, value) {
-    setRows((currentRows) =>
-      currentRows.map((row) => (row.id === id ? { ...row, [key]: value } : row)),
-    );
+    updateReport((current) => ({
+      ...current,
+      rows: current.rows.map((row) => (row.id === id ? { ...row, [key]: value } : row)),
+    }));
   }
 
   function addRow() {
-    setRows((currentRows) => [...currentRows, { id: nextId, branch: "", amount: "R00.00" }]);
-    setNextId((currentId) => currentId + 1);
+    updateReport((current) => ({
+      ...current,
+      rows: [...current.rows, { id: current.nextId, branch: "", amount: "R00.00" }],
+      nextId: current.nextId + 1,
+    }));
   }
 
   function resetReport() {
-    setTitle("TINASHE MAKONZA FUNERAL");
-    setRows(INITIAL_ROWS.map((row, id) => ({ ...row, id })));
-    setNextId(INITIAL_ROWS.length);
-    setExpenses("R00.00");
-    setTotalCash("R00.00");
-    setFirstContact("MR NYAMAZAMO: +27 84 784 5074");
-    setSecondContact("MR CHIKWASHA: +27 676 758 067");
-    setReportDate(getCurrentDateValue());
+    updateReport(createInitialReport());
   }
 
   return (
@@ -133,8 +186,9 @@ function ContributionReportPage() {
 
       {exportError && <p className="report-export-error" role="alert">{exportError}</p>}
       <p className="report-edit-hint">
-        Edit the report fields below. Choose “Print / Save as PDF”, then select “Save as PDF” in the print dialog.
+        Changes are saved on this device and will remain available after you log out. Edit the report below, or choose “Print / Save as PDF” and then select “Save as PDF” in the print dialog.
       </p>
+      {saveError && <p className="report-export-error" role="alert">{saveError}</p>}
 
       <article ref={reportRef} className="report-sheet" aria-label="Funeral contributions report">
         <svg className="report-decoration" viewBox="0 0 210 297" preserveAspectRatio="none" aria-hidden="true">
@@ -161,7 +215,7 @@ function ContributionReportPage() {
             aria-label="Funeral name"
             className="report-title-input"
             value={title}
-            onChange={(event) => setTitle(event.target.value)}
+            onChange={(event) => updateReport((current) => ({ ...current, title: event.target.value }))}
           />
           <div className="report-subtitle">CONTRIBUTIONS</div>
         </section>
@@ -196,7 +250,10 @@ function ContributionReportPage() {
                     className="report-remove-row"
                     type="button"
                     aria-label={`Remove branch ${index + 1}`}
-                    onClick={() => setRows((currentRows) => currentRows.filter((item) => item.id !== row.id))}
+                    onClick={() => updateReport((current) => ({
+                      ...current,
+                      rows: current.rows.filter((item) => item.id !== row.id),
+                    }))}
                   >
                     ×
                   </button>
@@ -205,12 +262,12 @@ function ContributionReportPage() {
             ))}
             <tr className="report-expenses-row">
               <th scope="row">EXPENSES</th>
-              <td><input aria-label="Expenses" value={expenses} onChange={(event) => setExpenses(event.target.value)} /></td>
+              <td><input aria-label="Expenses" value={expenses} onChange={(event) => updateReport((current) => ({ ...current, expenses: event.target.value }))} /></td>
               <td className="report-row-action"></td>
             </tr>
             <tr className="report-total-row">
               <th scope="row">TOTAL CASH</th>
-              <td><input aria-label="Total cash" value={totalCash} onChange={(event) => setTotalCash(event.target.value)} /></td>
+              <td><input aria-label="Total cash" value={totalCash} onChange={(event) => updateReport((current) => ({ ...current, totalCash: event.target.value }))} /></td>
               <td className="report-row-action"></td>
             </tr>
           </tbody>
@@ -219,9 +276,9 @@ function ContributionReportPage() {
         <footer className="report-footer">
           <div className="report-contact-title">FOR INQUIRIES CONTACT</div>
           <div className="report-contact-lines">
-            <input aria-label="First contact" value={firstContact} onChange={(event) => setFirstContact(event.target.value)} />
+            <input aria-label="First contact" value={firstContact} onChange={(event) => updateReport((current) => ({ ...current, firstContact: event.target.value }))} />
             <span>OR</span>
-            <input aria-label="Second contact" value={secondContact} onChange={(event) => setSecondContact(event.target.value)} />
+            <input aria-label="Second contact" value={secondContact} onChange={(event) => updateReport((current) => ({ ...current, secondContact: event.target.value }))} />
           </div>
           <div className="report-signature">
             <span>SIGNATURE:</span>
@@ -232,7 +289,7 @@ function ContributionReportPage() {
                 aria-label="Report date"
                 type="date"
                 value={reportDate}
-                onChange={(event) => setReportDate(event.target.value)}
+                onChange={(event) => updateReport((current) => ({ ...current, reportDate: event.target.value }))}
               />
             </label>
           </div>
